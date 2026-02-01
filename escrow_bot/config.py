@@ -1,46 +1,59 @@
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-def _split_ints(value: str) -> list[int]:
-    if not value:
-        return []
-    return [int(item.strip()) for item in value.split(",") if item.strip()]
 
 
 @dataclass(frozen=True)
-class Settings:
+class Config:
     bot_token: str
     admin_ids: list[int]
-    database_path: str
-    fee_percent: float
-    fee_flat: float
-    max_deal_amount: float
-    max_active_deals_per_user: int
-    deal_create_rate_limit_seconds: int
-    mock_blockchain: bool
-    log_level: str
-    ton_deposit_address: str
-    usdt_ton_deposit_address: str
-    usdt_tron_deposit_address: str
+    mock_chain: bool
+    escrow_addr_ton: str
+    escrow_addr_usdt_ton: str
+    escrow_addr_usdt_trc20: str
+    fee_wallet_ton: str
+    fee_wallet_usdt_ton: str
+    fee_wallet_usdt_trc20: str
+    private_log_channel_id: int | None
+    public_log_channel_id: int | None
+    updates_channel_url: str | None
+    vouches_channel_url: str | None
+    support_username_or_url: str | None
+    ton_signing_secret: str | None
+    tron_private_key: str | None
+    callback_hmac_secret: str
 
 
-def load_settings() -> Settings:
-    return Settings(
+def _parse_admin_ids(raw: str) -> list[int]:
+    if not raw:
+        return []
+    return [int(item.strip()) for item in raw.split(",") if item.strip()]
+
+
+def _optional_int(value: str | None) -> int | None:
+    if not value:
+        return None
+    return int(value)
+
+
+def load_config() -> Config:
+    return Config(
         bot_token=os.getenv("BOT_TOKEN", ""),
-        admin_ids=_split_ints(os.getenv("ADMIN_IDS", "")),
-        database_path=os.getenv("DATABASE_PATH", "escrow.db"),
-        fee_percent=float(os.getenv("FEE_PERCENT", "0")),
-        fee_flat=float(os.getenv("FEE_FLAT", "0")),
-        max_deal_amount=float(os.getenv("MAX_DEAL_AMOUNT", "10000")),
-        max_active_deals_per_user=int(os.getenv("MAX_ACTIVE_DEALS_PER_USER", "5")),
-        deal_create_rate_limit_seconds=int(os.getenv("DEAL_CREATE_RATE_LIMIT_SECONDS", "60")),
-        mock_blockchain=os.getenv("MOCK_BLOCKCHAIN", "false").lower() == "true",
-        log_level=os.getenv("LOG_LEVEL", "INFO"),
-        ton_deposit_address=os.getenv("TON_DEPOSIT_ADDRESS", ""),
-        usdt_ton_deposit_address=os.getenv("USDT_TON_DEPOSIT_ADDRESS", ""),
-        usdt_tron_deposit_address=os.getenv("USDT_TRC20_DEPOSIT_ADDRESS", ""),
+        admin_ids=_parse_admin_ids(os.getenv("ADMIN_IDS", "")),
+        mock_chain=os.getenv("MOCK_CHAIN", "0") == "1",
+        escrow_addr_ton=os.getenv("ESCROW_ADDR_TON", ""),
+        escrow_addr_usdt_ton=os.getenv("ESCROW_ADDR_USDT_TON", ""),
+        escrow_addr_usdt_trc20=os.getenv("ESCROW_ADDR_USDT_TRC20", ""),
+        fee_wallet_ton=os.getenv("FEE_WALLET_TON", ""),
+        fee_wallet_usdt_ton=os.getenv("FEE_WALLET_USDT_TON", ""),
+        fee_wallet_usdt_trc20=os.getenv("FEE_WALLET_USDT_TRC20", ""),
+        private_log_channel_id=_optional_int(os.getenv("PRIVATE_LOG_CHANNEL_ID")),
+        public_log_channel_id=_optional_int(os.getenv("PUBLIC_LOG_CHANNEL_ID")),
+        updates_channel_url=os.getenv("UPDATES_CHANNEL_URL"),
+        vouches_channel_url=os.getenv("VOUCHES_CHANNEL_URL"),
+        support_username_or_url=os.getenv("SUPPORT_USERNAME_OR_URL"),
+        ton_signing_secret=os.getenv("TON_SIGNING_SECRET"),
+        tron_private_key=os.getenv("TRON_PRIVATE_KEY"),
+        callback_hmac_secret=os.getenv("CALLBACK_HMAC_SECRET", ""),
     )
